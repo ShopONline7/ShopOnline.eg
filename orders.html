@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الطلبات الواردة</title>
+    <link rel="icon" href="marketlogo.png" type="image/png">
+    <style>
+        /* خلفية الصفحة مع صورة */
+        body {
+            font-family: Arial, sans-serif;
+            background: url('market.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9); /* خلفية شبه شفافة */
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+
+        .order {
+            border: 1px solid #f0c000;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #fff;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .order h3 {
+            margin: 0;
+            color: #f0c000;
+            font-size: 22px;
+        }
+
+        .order p {
+            margin: 8px 0;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .media {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .media img, .media video {
+            width: 160px; /* تكبير الصورة */
+            height: 160px; /* تكبير الصورة */
+            margin: 5px;
+            border-radius: 10px;
+            border: 2px solid #f0c000;
+        }
+
+        .delete-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff0000;
+        }
+
+        /* إضافة تأثيرات مرحة */
+        .order:hover {
+            transform: scale(1.05);
+            transition: 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>الطلبات الواردة</h1>
+        <div id="orderContainer"></div>
+    </div>
+
+    <!-- Firebase SDK v8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // دالة لتحميل الطلبات من Firebase
+        function loadOrders() {
+            const ordersRef = database.ref("orders");
+            ordersRef.on("value", snapshot => {
+                const orders = snapshot.val();
+                const container = document.getElementById("orderContainer");
+                if (orders) {
+                    // تجميع الطلبات حسب العميل
+                    const customers = {};
+
+                    // تجميع المنتجات حسب العميل
+                    Object.keys(orders).forEach(key => {
+                        const order = orders[key];
+                        const customerKey = `${order.customerName}-${order.customerPhone}`; // تجميع الطلبات بحسب اسم العميل ورقم هاتفه
+                        if (!customers[customerKey]) {
+                            customers[customerKey] = {
+                                customerName: order.customerName,
+                                customerPhone: order.customerPhone,
+                                customerAddress: order.customerAddress,
+                                orderDate: order.orderDate,
+                                products: []
+                            };
+                        }
+                        customers[customerKey].products.push(order);
+                    });
+
+                    // عرض الطلبات حسب العميل
+                    container.innerHTML = Object.keys(customers).map(customerKey => {
+                        const customer = customers[customerKey];
+                        const productHtml = customer.products.map(order => {
+                            const imagesHtml = order.productImages && Array.isArray(order.productImages) ? 
+                                order.productImages.map(img => `<img src="${img}" alt="صورة المنتج">`).join('') : '<p>لا توجد صور.</p>';
+
+                            const videosHtml = order.productVideos && Array.isArray(order.productVideos) ? 
+                                order.productVideos.map(video => `<video src="${video}" controls></video>`).join('') : '<p>لا توجد فيديوهات.</p>';
+
+                            return `
+                                <div class="order">
+                                    <h3>اسم المنتج: ${order.productName}</h3>
+                                    <p>السعر: ${order.productPrice} جنيه</p>
+                                    <p>التصنيف: ${order.productCategory}</p>
+                                    <p>العدد: ${order.quantity}</p>
+                                    <div class="media">
+                                        <h4></h4>
+                                        ${imagesHtml}
+                                        <h4></h4>
+                                        ${videosHtml}
+                                    </div>
+                                    <p><strong>وقت الطلب:</strong> ${new Date(order.orderDate).toLocaleString()}</p>
+                                </div>
+                            `;
+                        }).join('');
+
+                        return `
+                            <div class="order" id="order-${customerKey}">
+                                <h3>بيانات العميل:</h3>
+                                <p>الاسم: ${customer.customerName}</p>
+                                <p>رقم الهاتف: ${customer.customerPhone}</p>
+                                <p>العنوان: ${customer.customerAddress}</p>
+                                <p><strong>وقت الطلب:</strong> ${new Date(customer.orderDate).toLocaleString()}</p>
+                                ${productHtml}
+                                <button class="delete-btn" onclick="deleteOrder('${customerKey}')">حذف</button>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = "<p>لا توجد طلبات حالياً.</p>";
+                }
+            });
+        }
+
+        // دالة لحذف الطلبات بالكامل من Firebase
+        function deleteOrder(customerKey) {
+            const customerOrdersRef = database.ref("orders");
+            customerOrdersRef.orderByChild("customerName").equalTo(customerKey.split('-')[0]).once('value', snapshot => {
+                snapshot.forEach(childSnapshot => {
+                    childSnapshot.ref.remove()
+                        .then(() => {
+                            const orderElement = document.getElementById(`order-${customerKey}`);
+                            if (orderElement) {
+                                orderElement.remove();
+                            }
+                        })
+                        .catch(error => {
+                            alert("حدث خطأ أثناء حذف الطلب: " + error.message);
+                        });
+                });
+            });
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>

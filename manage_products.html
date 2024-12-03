@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض المنتجات</title>
+    <style>
+        /* تعيين خلفية الصفحة */
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background-image: url('market.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+
+        /* تنسيق مربع البحث */
+        .search-box {
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* تنسيق كل منتج */
+        .product {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            position: relative;
+        }
+
+        /* تنسيق الصورة */
+        .product img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* تنسيق الفيديو */
+        .product video {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        /* تنسيق تفاصيل المنتج */
+        .product-details {
+            margin-top: 10px;
+        }
+
+        /* تنسيق التصنيف */
+        .category {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* تنسيق النصوص داخل التفاصيل */
+        .product-details strong {
+            color: #444;
+        }
+
+        /* إضافة زر الحذف */
+        .delete-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* إعدادات القائمة التي تحتوي على المنتجات */
+        #products-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>عرض المنتجات</h1>
+
+    <!-- مربع البحث -->
+    <input type="text" id="searchBox" class="search-box" placeholder="ابحث عن منتج..." oninput="searchProducts()">
+
+    <div id="products-list"></div>
+
+    <!-- تضمين مكتبات Firebase بإصدار 8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+
+    <script>
+        // إعداد Firebase
+        var firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+
+        // دالة لعرض المنتجات
+        function loadProducts() {
+            var productsRef = database.ref('products');
+            productsRef.on('value', function(snapshot) {
+                var productsList = document.getElementById("products-list");
+                productsList.innerHTML = ""; // مسح القائمة القديمة
+
+                snapshot.forEach(function(childSnapshot) {
+                    var product = childSnapshot.val();
+                    var productKey = childSnapshot.key;
+                    var productDiv = document.createElement("div");
+                    productDiv.classList.add("product");
+
+                    // عرض تفاصيل المنتج مع التصنيف
+                    productDiv.innerHTML = `
+                        <button class="delete-button" onclick="deleteProduct('${productKey}')">حذف</button>
+                        <div class="category">التصنيف: ${product.category}</div>
+                        <div class="product-details">
+                            <strong>اسم المنتج:</strong> ${product.name}<br>
+                            <strong>الوصف:</strong> ${product.description}<br>
+                            <strong>السعر:</strong> ${product.price} ريال<br>
+                        </div>
+                        <div>
+                            <strong>الصور:</strong><br>
+                            ${product.images ? product.images.map(image => `<img src="${image}" alt="product image">`).join('') : 'لا توجد صور'}
+                        </div>
+                        <div>
+                            <strong>الفيديوهات:</strong><br>
+                            ${product.videos ? product.videos.map(video => `<div class="product-video"><video controls><source src="${video}" type="video/mp4"></video></div>`).join('') : 'لا توجد فيديوهات'}
+                        </div>
+                    `;
+                    productsList.appendChild(productDiv);
+                });
+            });
+        }
+
+        // دالة لحذف المنتج
+        function deleteProduct(productKey) {
+            var productRef = database.ref('products/' + productKey);
+            productRef.remove()
+                .then(function() {
+                    alert("تم حذف المنتج بنجاح");
+                    loadProducts();  // إعادة تحميل المنتجات بعد الحذف
+                })
+                .catch(function(error) {
+                    alert("حدث خطأ أثناء حذف المنتج: " + error.message);
+                });
+        }
+
+        // دالة للبحث في المنتجات
+        function searchProducts() {
+            const query = document.getElementById("searchBox").value.toLowerCase();
+            const allProducts = document.getElementsByClassName("product");
+
+            // إظهار/إخفاء المنتجات بناءً على البحث
+            Array.from(allProducts).forEach(function(productDiv) {
+                const productName = productDiv.querySelector(".product-details").innerText.toLowerCase();
+                if (productName.includes(query)) {
+                    productDiv.style.display = "";
+                } else {
+                    productDiv.style.display = "none";
+                }
+            });
+        }
+
+        // تحميل المنتجات عند تحميل الصفحة
+        window.onload = function() {
+            loadProducts();
+        };
+    </script>
+
+</body>
+</html>

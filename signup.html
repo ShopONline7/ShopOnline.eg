@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب</title>
+<link rel="icon" href="marketlogo.png" type="image/png">
+    <!-- إضافة روابط Firebase SDK (الإصدار التقليدي) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        /* تعيين الخلفية لصورة ودمج اللون الأصفر */
+        body {
+            font-family: Arial, sans-serif;
+            background: url('market.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: rgba(255, 255, 255, 0.8); /* لون خلفية شبه شفاف */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #ffcc00; /* اللون الأصفر المتناسق مع الخلفية */
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ffb300; /* لون أصفر داكن عند المرور */
+        }
+
+        input:focus, button:focus {
+            outline: none;
+            border-color: #ffcc00;
+        }
+
+        input::placeholder {
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>إنشاء حساب</h1>
+        <form id="signupForm">
+            <input type="text" id="name" placeholder="الاسم الكامل" required>
+            <input type="text" id="phone" placeholder="رقم الهاتف" required>
+            <input type="text" id="address" placeholder="العنوان" required>
+            <input type="text" id="email" placeholder="البريد الالكتروني (اختياري)"> 
+            <input type="password" id="password" placeholder="كلمة المرور" required>
+            <button type="submit">إنشاء حساب</button>
+        </form>
+    </div>
+
+    <script>
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        document.getElementById("signupForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+            const address = document.getElementById("address").value;
+            const password = document.getElementById("password").value;
+	    const email = document.getElementById("email").value;
+
+            // إضافة البيانات إلى Firebase Realtime Database
+            const userRef = firebase.database().ref('users/' + phone); // استخدام الهاتف كمفتاح فريد
+            userRef.set({
+                name: name,
+                phone: phone,
+                address: address,
+                password: password,
+                email:email
+            }).then(() => {
+                alert("تم إنشاء الحساب بنجاح!");
+                window.location.href = "login.html";
+            }).catch((error) => {
+                alert("حدث خطأ أثناء إنشاء الحساب: " + error.message);
+            });
+        });
+    </script>
+</body>
+</html>

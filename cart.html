@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>السلة</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: url('market.png');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 36px;
+            color: #fff;
+        }
+
+        .order-item {
+            background: rgba(255, 255, 255, 0.8); /* شفافية خلفية العنصر */
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .order-item:hover {
+            transform: scale(1.05);
+        }
+
+        .order-item strong {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .order-item p {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .order-item button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .order-item button:hover {
+            background: #c0392b;
+        }
+
+        #cartItems {
+            list-style: none;
+            padding: 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .no-items {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 50px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>السلة</h1>
+    <ul id="cartItems"></ul>
+
+    <!-- إضافة مكتبات Firebase الإصدار 8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
+
+    <script>
+        // تهيئة Firebase باستخدام معلومات مشروعك
+        const firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // دالة لتحميل بيانات السلة
+        function loadCartItems() {
+            const phone = localStorage.getItem("customerPhone");
+            const ordersRef = database.ref('orders').orderByChild('customerPhone').equalTo(phone);
+            ordersRef.once('value', (snapshot) => {
+                const orders = snapshot.val();
+                const cartItems = document.getElementById('cartItems');
+                cartItems.innerHTML = '';
+
+                if (orders) {
+                    Object.keys(orders).forEach(orderKey => {
+                        const order = orders[orderKey];
+                        const orderItemHtml = `
+                            <li class="order-item">
+                                <strong>${order.productName}</strong> - ${order.productPrice} جنيه
+                                <p>الكمية: ${order.quantity}</p>
+                                <button onclick="removeOrder('${orderKey}')">حذف</button>
+                            </li>
+                        `;
+                        cartItems.innerHTML += orderItemHtml;
+                    });
+                } else {
+                    cartItems.innerHTML = '<p class="no-items">لا توجد منتجات في السلة.</p>';
+                }
+            });
+        }
+
+        // دالة لحذف الطلب من السلة
+        function removeOrder(orderKey) {
+            const orderRef = database.ref('orders').child(orderKey);
+            orderRef.remove()
+                .then(() => {
+                    alert('تم حذف المنتج من السلة.');
+                    loadCartItems();  // إعادة تحميل السلة بعد الحذف
+                    updateCartNotification();  // تحديث إشعار السلة في الصفحة الرئيسية
+                })
+                .catch(error => {
+                    
+                });
+        }
+
+        // تحميل السلة عند تحميل الصفحة
+        window.onload = loadCartItems;
+    </script>
+</body>
+</html>

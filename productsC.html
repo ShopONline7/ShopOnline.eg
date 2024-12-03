@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <a href="https://www.facebook.com/share/p/1ELTSRkBCf/" style="cursor: pointer;">
+        <img src="call.png" alt="Call Icon" style="width: 40px; height: 40px; cursor: pointer;">
+    </a>
+    <a href="cart.html" id="cartLink" style="position: fixed; top: 20px; left: 20px; display: inline-block; z-index: 1000;">
+    <img id="cartIcon" src="cart.png" alt="سلة المشتريات" style="width: 50px; height: 50px; cursor: pointer;">
+   
+</a>
+
+
+
+
+
+    <title>المنتجات</title>
+    <link rel="icon" href="marketlogo.png" type="image/png">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-image: url('market.png'); 
+            background-size: cover; 
+            background-position: center; 
+            color: #333;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 50px auto; 
+            background-color: rgba(255, 255, 255, 0.8); 
+            padding: 20px; 
+            border-radius: 10px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .product-item {
+            background: #fff; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin: 10px 0; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .product-item img, .product-item video {
+            border-radius: 8px; 
+            margin: 5px; 
+            width: 100px; 
+            height: 100px; 
+            cursor: pointer;
+        }
+        .details h3 { 
+            color: #333; 
+            margin: 10px 0; 
+            font-size: 18px; 
+        }
+        .details p { 
+            color: #666; 
+            font-size: 14px;
+        }
+        .actions button { 
+            background: #f39c12; 
+            color: #fff; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 4px; 
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .actions button:hover { 
+            background: #e67e22; 
+        }
+        button {
+            background-color: #f39c12;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #e67e22;
+        }
+
+        /* إضافة CSS لعرض الصور في ملء الشاشة */
+        .fullscreen-img {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .fullscreen-img img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .fullscreen-img:target {
+            display: flex;
+        }
+.more-btn {
+    font-size: 12px; /* تصغير حجم النص */
+    padding: 5px 15px; /* تقليص المسافة داخل الزر */
+    width: 80px; /* تحديد عرض الزر */
+    border-radius: 5px; /* جعل الزر أكثر استدارة */
+}
+
+	.search-bar {
+    margin-bottom: 20px;
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+	.full-description {
+    display: none;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>المنتجات في التصنيف: <span id="categoryName"></span></h1>
+	<!-- إضافة مربع البحث -->
+	<input type="text" id="searchInput" class="search-bar" placeholder="ابحث عن منتج..." onkeyup="searchProduct()">
+
+        <ul id="productList"></ul>
+    </div>
+
+    <!-- نافذة ملء الشاشة -->
+    <div id="fullscreen" class="fullscreen-img">
+        <img id="fullscreenImage" src="" alt="صورة المنتج">
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+	function toggleDescription(button) {
+    const shortDescription = button.previousElementSibling.querySelector('.short-description');
+    const fullDescription = button.previousElementSibling.querySelector('.full-description');
+    
+    // إذا كان الوصف الكامل مخفيًا، عرضه والعكس
+    if (fullDescription.style.display === "none") {
+        fullDescription.style.display = "inline";
+        shortDescription.style.display = "none";
+        button.textContent = "أخفِ";
+    } else {
+        fullDescription.style.display = "none";
+        shortDescription.style.display = "inline";
+        button.textContent = "المزيد";
+    }
+}
+        // دالة لتحميل المنتجات الخاصة بالتسمية الموجودة في URL
+        function loadProducts(categoryName) {
+            const productsRef = database.ref('products');
+            productsRef.orderByChild('category').equalTo(categoryName).once('value', (snapshot) => {
+                const products = snapshot.val() || [];
+                const productList = document.getElementById('productList');
+                productList.innerHTML = Object.keys(products).map(key => {
+                    const product = products[key];
+                    const imagesHtml = product.images.map(image => `<a href="#fullscreen"><img src="${image}" alt="صورة المنتج" onclick="showImage('${image}')"></a>`).join('');
+                    const videosHtml = product.videos.map(video => `<video controls><source src="${video}" type="video/mp4">المتصفح لا يدعم تشغيل الفيديو</video>`).join('');
+                    return ` 
+                        <li class="product-item" id="${key}">
+                            <strong>${product.name}</strong> - ${product.price} جنيه
+                            <div class="details">
+                                <p>تصنيف: ${product.category}</p>
+    <p>
+        <span class="short-description">${product.description.substring(0, 100)}...</span>
+        <span class="full-description" style="display: none;">${product.description}</span>
+    </p>
+    <button class="more-btn" onclick="toggleDescription(this)">المزيد</button>
+                                <div> <div style="display: flex; flex-wrap: wrap;">${imagesHtml}</div></div>
+                                <div> <div style="display: flex; flex-wrap: wrap;">${videosHtml}</div></div>
+                                <!-- إضافة حقل إدخال لاختيار عدد المنتج -->
+				<p>الكمية:</p>
+                                <input type="number" id="quantity_${key}" value="1" min="1" style="width: 60px; text-align: center;">
+                            </div>
+                            <button onclick="purchaseProduct('${key}')">شراء</button>
+                        </li>
+                    `;
+                }).join('');
+            });
+        }
+
+        // تحميل التصنيف من URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoryName = urlParams.get('category');
+        if (categoryName) {
+            document.getElementById('categoryName').textContent = categoryName;
+            loadProducts(categoryName);  // تحميل المنتجات من التصنيف المحدد
+        }
+
+
+        // دالة لشراء المنتج بناءً على رقم الهاتف المحفوظ في localStorage
+        function purchaseProduct(productKey) {
+            const phone = localStorage.getItem("customerPhone");  // استرجاع رقم الهاتف من localStorage
+            if (!phone) {
+                alert("يرجى تسجيل الدخول أولاً.");
+                return;
+            }
+
+            // استرجاع بيانات العميل من قاعدة البيانات باستخدام رقم الهاتف
+            const userRef = database.ref('users').orderByChild('phone').equalTo(phone);
+            userRef.once('value', (snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    const user = Object.values(userData)[0];  // نحصل على أول مستخدم من البيانات (التي تكون تحت رقم الهاتف المدخل)
+                    const name = user.name;
+                    const address = user.address;
+
+                    // الحصول على بيانات المنتج الذي اختاره العميل
+                    const productRef = database.ref('products').child(productKey);
+                    productRef.once('value', (snapshot) => {
+                        const product = snapshot.val();
+
+                        // استرجاع عدد المنتج من حقل الإدخال
+                        const quantity = document.getElementById(`quantity_${productKey}`).value;
+
+                        // إضافة الطلب إلى قاعدة بيانات "orders"
+                        const orderRef = database.ref('orders').push();
+                        orderRef.set({
+                            customerName: name,
+                            customerPhone: phone,
+                            customerAddress: address,
+                            productName: product.name,
+                            productPrice: product.price,
+                            productCategory: product.category,
+                            productImages: product.images,
+                            productVideos: product.videos,
+                            quantity: quantity,
+                            orderDate: new Date().toISOString() // إضافة التاريخ
+                        });
+
+                        alert("تم تسجيل الطلب بنجاح!");
+                    });
+                } else {
+                    alert("رقم الهاتف غير موجود في قاعدة البيانات.");
+                }
+            });
+        }
+
+        // دالة لعرض الصورة في ملء الشاشة
+        function showImage(imageUrl) {
+            const fullscreenImg = document.getElementById('fullscreen');
+            const fullscreenImage = document.getElementById('fullscreenImage');
+            fullscreenImage.src = imageUrl;
+        }
+	function searchProduct() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const productItems = document.querySelectorAll('.product-item');
+    let found = false;
+
+    productItems.forEach(item => {
+        const productName = item.querySelector('strong').textContent.toLowerCase();
+        if (productName.includes(searchTerm)) {
+            item.style.display = 'block';
+            if (!found) {
+                item.scrollIntoView({behavior: 'smooth', block: 'center'});
+                found = true;
+            }
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+    </script>
+</body>
+</html>

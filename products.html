@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التصنيفات</title>
+<link rel="icon" href="marketlogo.png" type="image/png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('market.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8); /* خلفية شفافة بيضاء */
+            padding: 30px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #f39c12; /* لون أصفر مناسب */
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .category-button {
+            background: #f39c12; /* زر بلون أصفر */
+            color: #fff;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+        .category-button:hover {
+            background: #e67e22; /* لون داكن عند التمرير */
+        }
+        .category-button:active {
+            background: #d35400; /* لون أغمق عند الضغط */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>التصنيفات</h1>
+        <div id="categoryContainer"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // دالة لتحميل التصنيفات
+        function loadCategories() {
+            const productsRef = database.ref('products');
+            productsRef.once('value', (snapshot) => {
+                const products = snapshot.val() || [];
+                const categories = new Set(); // مجموعة لتخزين التصنيفات الفريدة
+
+                // استخراج التصنيفات من المنتجات
+                Object.keys(products).forEach(key => {
+                    const product = products[key];
+                    categories.add(product.category); // إضافة التصنيف إلى المجموعة
+                });
+
+                // إنشاء الأزرار للتصنيفات
+                const categoryContainer = document.getElementById('categoryContainer');
+                categoryContainer.innerHTML = Array.from(categories).map(category => {
+                    return `<button class="category-button" onclick="window.location.href='productsC.html?category=${category}'">${category}</button>`;
+                }).join('');
+            });
+        }
+
+        // تحميل التصنيفات عند بدء الصفحة
+        loadCategories();
+    </script>
+</body>
+</html>
