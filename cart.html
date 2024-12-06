@@ -116,7 +116,7 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
                         const order = orders[orderKey];
                         const orderItemHtml = `
                             <li class="order-item">
-                                <strong>${order.productName}</strong> - ${order.productPrice} جنيه
+                                <strong>${order.productName}</strong> - السعر : ${order.productPrice} جنيه
                                 <p>الكمية: ${order.quantity}</p>
                                 <button onclick="removeOrder('${orderKey}')">حذف</button>
                             </li>
