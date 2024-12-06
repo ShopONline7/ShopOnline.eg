@@ -10,7 +10,9 @@
         /* إعدادات الخلفية */
         body {
             font-family: Arial, sans-serif;
-            background: url('market.png') no-repeat center center fixed;
+            background-image: url('market.png');
+background-repeat: no-repeat; /* يمنع تكرار الخلفية */
+    background-attachment: fixed; /* يجعل الخلفية ثابتة عند التمرير */
             background-size: cover;
             color: #ffcc00; /* تغيير اللون إلى الأصفر */
             margin: 0;
