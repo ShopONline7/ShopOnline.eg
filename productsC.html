@@ -129,6 +129,25 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
 	.full-description {
     display: none;
 }
+ video {
+        position: relative;
+        cursor: pointer;
+    }
+    video::before {
+        content: '\25B6'; /* رمز التشغيل */
+        font-size: 40px;
+        color: white;
+        text-shadow: 0 0 5px black;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        display: none;
+    }
+    video.paused::before {
+        display: block;
+    }
 
     </style>
 </head>
@@ -192,8 +211,14 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
                     const product = products[key];
                     const imagesHtml = product.images.map(image => `<a href="#fullscreen"><img src="${image}" alt="صورة المنتج" onclick="showImage('${image}')"></a>`).join('');
                     const videosHtml = product.videos && product.videos.length > 0 
-    ? product.videos.map(video => `<video onclick="showVideo('${video}')" style="cursor: pointer;"><source src="${video}" type="video/mp4">المتصفح لا يدعم تشغيل الفيديو</video>`).join('') 
+    ? product.videos.map(video => `<div style="position: relative;">
+        <video class="paused" onclick="showVideo('${video}')">
+            <source src="${video}" type="video/mp4">
+            المتصفح لا يدعم تشغيل الفيديو
+        </video>
+    </div>`).join('') 
     : '';
+
 
                     return ` 
                         <li class="product-item" id="${key}">
@@ -299,6 +324,36 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
         }
     });
 }
+// دالة لعرض الفيديو في وضع ملء الشاشة عند الضغط
+function showVideo(videoUrl) {
+    const fullscreen = document.createElement('div');
+    fullscreen.style.position = 'fixed';
+    fullscreen.style.top = '0';
+    fullscreen.style.left = '0';
+    fullscreen.style.width = '100%';
+    fullscreen.style.height = '100%';
+    fullscreen.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+    fullscreen.style.zIndex = '10000';
+    fullscreen.style.display = 'flex';
+    fullscreen.style.justifyContent = 'center';
+    fullscreen.style.alignItems = 'center';
+
+    const video = document.createElement('video');
+    video.src = videoUrl;
+    video.style.maxWidth = '90%';
+    video.style.maxHeight = '90%';
+    video.controls = true;
+    video.autoplay = true;
+
+    // إغلاق وضع ملء الشاشة عند النقر خارج الفيديو
+    fullscreen.onclick = () => {
+        document.body.removeChild(fullscreen);
+    };
+
+    fullscreen.appendChild(video);
+    document.body.appendChild(fullscreen);
+}
+
     </script>
 </body>
 </html>
