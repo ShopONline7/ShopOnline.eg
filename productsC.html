@@ -191,7 +191,10 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
                 productList.innerHTML = Object.keys(products).map(key => {
                     const product = products[key];
                     const imagesHtml = product.images.map(image => `<a href="#fullscreen"><img src="${image}" alt="صورة المنتج" onclick="showImage('${image}')"></a>`).join('');
-                    const videosHtml = product.videos.map(video => `<video controls><source src="${video}" type="video/mp4">المتصفح لا يدعم تشغيل الفيديو</video>`).join('');
+                    const videosHtml = product.videos && product.videos.length > 0 
+    ? product.videos.map(video => `<video onclick="showVideo('${video}')" style="cursor: pointer;"><source src="${video}" type="video/mp4">المتصفح لا يدعم تشغيل الفيديو</video>`).join('') 
+    : '';
+
                     return ` 
                         <li class="product-item" id="${key}">
                             <strong>${product.name}</strong> -  السعر : ${product.price} جنيه
