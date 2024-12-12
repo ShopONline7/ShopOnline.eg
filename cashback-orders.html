@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طلبات الكاش باك</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            background-image: url('market.png');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+background-repeat: no-repeat; /* يمنع تكرار الخلفية */
+    background-attachment: fixed; /* يجعل الخلفية ثابتة عند التمرير */
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 30px;
+        }
+        .customer-card {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .customer-card h2 {
+            color: #f1c40f;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .customer-card .details, .customer-card .order-details {
+            margin-bottom: 15px;
+        }
+        .customer-card .details p, .customer-card .order-details p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .customer-card .order-details {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .delete-btn:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>طلبات الكاش باك</h1>
+
+    <div class="customerDetails" id="customerDetails"></div>
+
+    <script>
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+            projectId: "shoponlineeg-e4e31",
+            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+            messagingSenderId: "767852235542",
+            appId: "1:767852235542:web:db28ff5fc983614c239e37",
+            measurementId: "G-TM5K5HWFET",
+            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // استرجاع جميع بيانات العملاء وطلبات الكاش باك
+        database.ref('users').once('value', snapshot => {
+            const customers = snapshot.val();
+            const customerDetails = document.getElementById('customerDetails');
+            customerDetails.innerHTML = ''; // مسح المحتوى القديم
+
+            if (customers) {
+                // استرجاع جميع طلبات الكاش باك لجميع العملاء
+                database.ref('ordercashback').on('child_added', orderSnapshot => {
+                    const order = orderSnapshot.val();
+                    const customer = customers[order.customerPhone];
+
+                    if (customer) {
+                        const orderId = orderSnapshot.key;
+
+                        customerDetails.innerHTML += `
+                            <div class="customer-card" id="order-${orderId}">
+                                <h2>${customer.name}</h2>
+                                <div class="details">
+                                    <p><strong>رقم الهاتف:</strong> ${customer.phone}</p>
+                                    <p><strong>البريد الإلكتروني:</strong> ${customer.email}</p>
+                                    <p><strong>العنوان:</strong> ${customer.address}</p>
+                                </div>
+                                <div class="order-details">
+                                    <h3>تفاصيل طلب الكاش باك</h3>
+                                    <p><strong>الكمية:</strong> ${order.cashbackQuantity}</p>
+                                    <p><strong>تاريخ السحب:</strong> ${new Date(order.withdrawDate).toLocaleString()}</p>
+                                </div>
+                                <button class="delete-btn" onclick="deleteOrder('${orderId}')">حذف الطلب</button>
+                            </div>
+                        `;
+                    }
+                });
+            } else {
+                customerDetails.innerHTML = '<p>لا توجد بيانات للعملاء.</p>';
+            }
+        });
+
+        // حذف الطلب من Firebase ومن الصفحة
+        function deleteOrder(orderId) {
+            // حذف الطلب من Firebase
+            database.ref('ordercashback/' + orderId).remove()
+                .then(() => {
+                    // حذف الطلب من الصفحة
+                    const orderElement = document.getElementById('order-' + orderId);
+                    if (orderElement) {
+                        orderElement.remove();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error removing order: ", error);
+                });
+        }
+    </script>
+
+</body>
+</html>

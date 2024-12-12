@@ -252,54 +252,169 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
             loadProducts(categoryName);  // تحميل المنتجات من التصنيف المحدد
         }
 
+// إضافة عنصر لعرض الكاش باك في أعلى الصفحة
+const cashbackContainer = document.createElement('div');
+cashbackContainer.id = 'cashbackContainer';
+cashbackContainer.style.cssText = `
+    background-color: #e0f7e9;
+    border: 2px solid white;
+    color: green;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+`;
+cashbackContainer.textContent = 'كاش باك: 0 جنيه';
 
-        // دالة لشراء المنتج بناءً على رقم الهاتف المحفوظ في localStorage
-        function purchaseProduct(productKey) {
-            const phone = localStorage.getItem("customerPhone");  // استرجاع رقم الهاتف من localStorage
-            if (!phone) {
-                alert("يرجى تسجيل الدخول أولاً.");
-                return;
-            }
+// إضافة زر سحب بجانب الكاش باك
+const withdrawButton = document.createElement('button');
+withdrawButton.textContent = 'سحب';
+withdrawButton.style.cssText = `
+    margin-left: 10px;
+    padding: 5px 10px;
+    font-size: 16px;
+    background-color: green;
+    color: white;
+    border: 2px solid white;
+    border-radius: 5px;
+    cursor: pointer;
+`;
+cashbackContainer.appendChild(withdrawButton);
+document.body.insertBefore(cashbackContainer, document.body.firstChild);
 
-            // استرجاع بيانات العميل من قاعدة البيانات باستخدام رقم الهاتف
-            const userRef = database.ref('users').orderByChild('phone').equalTo(phone);
-            userRef.once('value', (snapshot) => {
-                const userData = snapshot.val();
-                if (userData) {
-                    const user = Object.values(userData)[0];  // نحصل على أول مستخدم من البيانات (التي تكون تحت رقم الهاتف المدخل)
-                    const name = user.name;
-                    const address = user.address;
+// دالة لتحديث الكاش باك بناءً على البيانات في Firebase
+function updateCashback() {
+    const phone = localStorage.getItem('customerPhone');
+    if (!phone) {
+        cashbackContainer.textContent = 'كاش باك: 0 جنيه';
+        return;
+    }
 
-                    // الحصول على بيانات المنتج الذي اختاره العميل
-                    const productRef = database.ref('products').child(productKey);
-                    productRef.once('value', (snapshot) => {
-                        const product = snapshot.val();
-
-                        // استرجاع عدد المنتج من حقل الإدخال
-                        const quantity = document.getElementById(`quantity_${productKey}`).value;
-
-                        // إضافة الطلب إلى قاعدة بيانات "orders"
-                        const orderRef = database.ref('orders').push();
-                        orderRef.set({
-                            customerName: name,
-                            customerPhone: phone,
-                            customerAddress: address,
-                            productName: product.name,
-                            productPrice: product.price,
-                            productCategory: product.category,
-                            productImages: product.images,
-                            productVideos: product.videos,
-                            quantity: quantity,
-                            orderDate: new Date().toISOString() // إضافة التاريخ
-                        });
-
-                        alert("تم تسجيل الطلب بنجاح!");
-                    });
-                } else {
-                    alert("رقم الهاتف غير موجود في قاعدة البيانات.");
-                }
-            });
+    const cashbackRef = database.ref('cashback').orderByChild('customerPhone').equalTo(phone);
+    cashbackRef.once('value', (snapshot) => {
+        const cashbackData = snapshot.val();
+        if (cashbackData) {
+            const cashbackKey = Object.keys(cashbackData)[0];
+            const cashbackQuantity = cashbackData[cashbackKey].cashbackQuantity || 0;
+            cashbackContainer.firstChild.textContent = `كاش باك: ${cashbackQuantity} جنيه`;
+        } else {
+            cashbackContainer.firstChild.textContent = ' كاش باك: 0 جنيه';
         }
+    });
+}
+
+// استدعاء الدالة عند تحميل الصفحة لتحديث الكاش باك
+updateCashback();
+
+// إضافة حدث للنقر على زر السحب
+withdrawButton.addEventListener('click', () => {
+    const phone = localStorage.getItem('customerPhone');
+    if (!phone) {
+        alert('يرجى تسجيل الدخول أولاً.');
+        return;
+    }
+
+    const cashbackRef = database.ref('cashback').orderByChild('customerPhone').equalTo(phone);
+    cashbackRef.once('value', (snapshot) => {
+        const cashbackData = snapshot.val();
+        if (cashbackData) {
+            const cashbackKey = Object.keys(cashbackData)[0];
+            const cashbackQuantity = cashbackData[cashbackKey].cashbackQuantity || 0;
+
+            if (cashbackQuantity < 50) {
+                alert('أقل مبلغ للسحب هو 50 جنيه.');
+            } else {
+                // حفظ بيانات السحب في قاعدة بيانات ordercashback
+                const orderCashbackRef = database.ref('ordercashback').push();
+                orderCashbackRef.set({
+                    customerPhone: phone,
+                    cashbackQuantity: cashbackQuantity,
+                    withdrawDate: new Date().toISOString()
+                });
+
+                // تحديث قيمة الكاش باك إلى 0
+                database.ref(`cashback/${cashbackKey}`).update({
+                    cashbackQuantity: 0
+                });
+
+                alert('تم السحب بنجاح!');
+
+                // تحديث الكاش باك على الواجهة
+                updateCashback();
+            }
+        } else {
+            alert('لا يوجد كاش باك متاح.');
+        }
+    });
+});
+
+// تعديل دالة الشراء لتحديث الكاش باك بعد إضافة الطلب
+function purchaseProduct(productKey) {
+    const phone = localStorage.getItem("customerPhone");
+    if (!phone) {
+        alert("يرجى تسجيل الدخول أولاً.");
+        return;
+    }
+
+    const userRef = database.ref('users').orderByChild('phone').equalTo(phone);
+    userRef.once('value', (snapshot) => {
+        const userData = snapshot.val();
+        if (userData) {
+            const user = Object.values(userData)[0];
+            const name = user.name;
+            const address = user.address;
+
+            const productRef = database.ref('products').child(productKey);
+            productRef.once('value', (snapshot) => {
+                const product = snapshot.val();
+                const quantity = parseInt(document.getElementById(`quantity_${productKey}`).value);
+
+                const orderRef = database.ref('orders').push();
+                orderRef.set({
+                    customerName: name,
+                    customerPhone: phone,
+                    customerAddress: address,
+                    productName: product.name,
+                    productPrice: product.price,
+                    productCategory: product.category,
+                    productImages: product.images,
+                    productVideos: product.videos,
+                    quantity: quantity,
+                    orderDate: new Date().toISOString()
+                });
+
+                const cashbackRef = database.ref('cashback').orderByChild('customerPhone').equalTo(phone);
+                cashbackRef.once('value', (snapshot) => {
+                    const cashbackData = snapshot.val();
+                    if (cashbackData) {
+                        const cashbackKey = Object.keys(cashbackData)[0];
+                        const existingCashback = cashbackData[cashbackKey].cashbackQuantity;
+                        const updatedCashback = existingCashback + quantity;
+                        database.ref(`cashback/${cashbackKey}`).update({
+                            cashbackQuantity: updatedCashback
+                        });
+                    } else {
+                        const newCashbackRef = database.ref('cashback').push();
+                        newCashbackRef.set({
+                            customerPhone: phone,
+                            cashbackQuantity: quantity,
+                            recordedDate: new Date().toISOString()
+                        });
+                    }
+
+                    // تحديث الكاش باك على الواجهة
+                    updateCashback();
+
+                    alert("تم الشراء بنجاح وسوف نتواصل معك لاتمام الشراء");
+                });
+            });
+        } else {
+            alert("رقم الهاتف غير موجود في قاعدة البيانات.");
+        }
+    });
+}
 
         // دالة لعرض الصورة في ملء الشاشة
         function showImage(imageUrl) {
