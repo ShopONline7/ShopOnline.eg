@@ -309,6 +309,7 @@ function updateCashback() {
 updateCashback();
 
 // إضافة حدث للنقر على زر السحب
+// إضافة حدث للنقر على زر السحب
 withdrawButton.addEventListener('click', () => {
     const phone = localStorage.getItem('customerPhone');
     if (!phone) {
@@ -316,37 +317,50 @@ withdrawButton.addEventListener('click', () => {
         return;
     }
 
-    const cashbackRef = database.ref('cashback').orderByChild('customerPhone').equalTo(phone);
-    cashbackRef.once('value', (snapshot) => {
-        const cashbackData = snapshot.val();
-        if (cashbackData) {
-            const cashbackKey = Object.keys(cashbackData)[0];
-            const cashbackQuantity = cashbackData[cashbackKey].cashbackQuantity || 0;
+    // التحقق من وجود بيانات في الـ orders
+    const ordersRef = database.ref('orders').orderByChild('customerPhone').equalTo(phone);
+    ordersRef.once('value', (snapshot) => {
+        const ordersData = snapshot.val();
 
-            if (cashbackQuantity < 50) {
-                alert('أقل مبلغ للسحب هو 50 جنيه.');
-            } else {
-                // حفظ بيانات السحب في قاعدة بيانات ordercashback
-                const orderCashbackRef = database.ref('ordercashback').push();
-                orderCashbackRef.set({
-                    customerPhone: phone,
-                    cashbackQuantity: cashbackQuantity,
-                    withdrawDate: new Date().toISOString()
-                });
-
-                // تحديث قيمة الكاش باك إلى 0
-                database.ref(`cashback/${cashbackKey}`).update({
-                    cashbackQuantity: 0
-                });
-
-                alert('تم السحب بنجاح!');
-
-                // تحديث الكاش باك على الواجهة
-                updateCashback();
-            }
-        } else {
-            alert('لا يوجد كاش باك متاح.');
+        // إذا كانت هناك طلبات في السلة
+        if (ordersData) {
+            alert('قم بحذف المنتجات من السلة أو انتظر تأكيد الشراء حتى تتمكن من السحب');
+            return;
         }
+
+        // إذا لم توجد طلبات في السلة، نستمر في عملية السحب
+        const cashbackRef = database.ref('cashback').orderByChild('customerPhone').equalTo(phone);
+        cashbackRef.once('value', (snapshot) => {
+            const cashbackData = snapshot.val();
+            if (cashbackData) {
+                const cashbackKey = Object.keys(cashbackData)[0];
+                const cashbackQuantity = cashbackData[cashbackKey].cashbackQuantity || 0;
+
+                if (cashbackQuantity < 50) {
+                    alert('أقل مبلغ للسحب هو 50 جنيه.');
+                } else {
+                    // حفظ بيانات السحب في قاعدة بيانات ordercashback
+                    const orderCashbackRef = database.ref('ordercashback').push();
+                    orderCashbackRef.set({
+                        customerPhone: phone,
+                        cashbackQuantity: cashbackQuantity,
+                        withdrawDate: new Date().toISOString()
+                    });
+
+                    // تحديث قيمة الكاش باك إلى 0
+                    database.ref(`cashback/${cashbackKey}`).update({
+                        cashbackQuantity: 0
+                    });
+
+                    alert('تم السحب بنجاح!');
+
+                    // تحديث الكاش باك على الواجهة
+                    updateCashback();
+                }
+            } else {
+                alert('لا يوجد كاش باك متاح.');
+            }
+        });
     });
 });
 
