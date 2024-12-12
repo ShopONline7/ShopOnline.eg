@@ -98,6 +98,42 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
 
         // تحميل التصنيفات عند بدء الصفحة
         loadCategories();
+function displayWelcomeMessage() {
+    const phone = localStorage.getItem("customerPhone");
+    if (!phone) {
+        alert("يرجى تسجيل الدخول أولاً.");
+        return;
+    }
+
+    const userRef = database.ref('users').orderByChild('phone').equalTo(phone);
+    userRef.once('value', (snapshot) => {
+        const userData = snapshot.val();
+        if (userData) {
+            const user = Object.values(userData)[0];
+            const name = user.name;
+
+            // إنشاء عنصر لتعرض رسالة الترحيب
+            const welcomeMessage = document.createElement("div");
+            welcomeMessage.style.backgroundColor = "#28a745"; // لون أخضر
+            welcomeMessage.style.color = "#fff"; // النص باللون الأبيض
+            welcomeMessage.style.padding = "10px";
+            welcomeMessage.style.fontSize = "18px";
+            welcomeMessage.style.fontWeight = "bold";
+            welcomeMessage.style.textAlign = "center";
+            welcomeMessage.style.borderRadius = "5px";
+            welcomeMessage.innerText = `مرحبًا، ${name}!`;
+
+            // إضافة الرسالة إلى بداية الصفحة
+            document.body.prepend(welcomeMessage);
+        } else {
+            alert("لا يوجد مستخدم مسجل بهذا الرقم.");
+        }
+    });
+}
+
+// استدعاء دالة الترحيب بعد تحميل الصفحة أو عند التحقق من رقم الهاتف
+displayWelcomeMessage();
+
     </script>
 </body>
 </html>
