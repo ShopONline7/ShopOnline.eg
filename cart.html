@@ -84,67 +84,90 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
     <!-- إضافة مكتبات Firebase الإصدار 8 -->
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-database.js"></script>
+<script>
+    // تهيئة Firebase باستخدام معلومات مشروعك
+    const firebaseConfig = {
+        apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
+        authDomain: "shoponlineeg-e4e31.firebaseapp.com",
+        projectId: "shoponlineeg-e4e31",
+        storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
+        messagingSenderId: "767852235542",
+        appId: "1:767852235542:web:db28ff5fc983614c239e37",
+        measurementId: "G-TM5K5HWFET",
+        databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
+    };
 
-    <script>
-        // تهيئة Firebase باستخدام معلومات مشروعك
-        const firebaseConfig = {
-            apiKey: "AIzaSyAC0jnWhNW39OzN4sMjy0wqTX8IYaKuMjk",
-            authDomain: "shoponlineeg-e4e31.firebaseapp.com",
-            projectId: "shoponlineeg-e4e31",
-            storageBucket: "shoponlineeg-e4e31.firebasestorage.app",
-            messagingSenderId: "767852235542",
-            appId: "1:767852235542:web:db28ff5fc983614c239e37",
-            measurementId: "G-TM5K5HWFET",
-            databaseURL: "https://shoponlineeg-e4e31-default-rtdb.firebaseio.com/"
-        };
+    // تهيئة Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-        // تهيئة Firebase
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    // دالة لتحميل بيانات السلة
+    function loadCartItems() {
+        const phone = localStorage.getItem("customerPhone");
+        const ordersRef = database.ref('orders').orderByChild('customerPhone').equalTo(phone);
+        ordersRef.once('value', (snapshot) => {
+            const orders = snapshot.val();
+            const cartItems = document.getElementById('cartItems');
+            cartItems.innerHTML = '';
 
-        // دالة لتحميل بيانات السلة
-        function loadCartItems() {
-            const phone = localStorage.getItem("customerPhone");
-            const ordersRef = database.ref('orders').orderByChild('customerPhone').equalTo(phone);
-            ordersRef.once('value', (snapshot) => {
-                const orders = snapshot.val();
-                const cartItems = document.getElementById('cartItems');
-                cartItems.innerHTML = '';
-
-                if (orders) {
-                    Object.keys(orders).forEach(orderKey => {
-                        const order = orders[orderKey];
-                        const orderItemHtml = `
-                            <li class="order-item">
-                                <strong>${order.productName}</strong> - السعر : ${order.productPrice} جنيه
-                                <p>الكمية: ${order.quantity}</p>
-                                <button onclick="removeOrder('${orderKey}')">حذف</button>
-                            </li>
-                        `;
-                        cartItems.innerHTML += orderItemHtml;
-                    });
-                } else {
-                    cartItems.innerHTML = '<p class="no-items">لا توجد منتجات في السلة.</p>';
-                }
-            });
-        }
-
-        // دالة لحذف الطلب من السلة
-        function removeOrder(orderKey) {
-            const orderRef = database.ref('orders').child(orderKey);
-            orderRef.remove()
-                .then(() => {
-                    alert('تم حذف المنتج من السلة.');
-                    loadCartItems();  // إعادة تحميل السلة بعد الحذف
-                    updateCartNotification();  // تحديث إشعار السلة في الصفحة الرئيسية
-                })
-                .catch(error => {
-                    
+            if (orders) {
+                Object.keys(orders).forEach(orderKey => {
+                    const order = orders[orderKey];
+                    const orderItemHtml = `
+                        <li class="order-item">
+                            <strong>${order.productName}</strong> - السعر : ${order.productPrice} جنيه
+                            <p>الكمية: ${order.quantity}</p>
+                            <button onclick="removeOrder('${orderKey}', ${order.quantity})">حذف</button>
+                        </li>
+                    `;
+                    cartItems.innerHTML += orderItemHtml;
                 });
-        }
+            } else {
+                cartItems.innerHTML = '<p class="no-items">لا توجد منتجات في السلة.</p>';
+            }
+        });
+    }
 
-        // تحميل السلة عند تحميل الصفحة
-        window.onload = loadCartItems;
-    </script>
+    // دالة لحذف الطلب من السلة وتحديث cashbackQuantity
+    function removeOrder(orderKey, quantity) {
+        const customerPhone = localStorage.getItem("customerPhone");
+        const orderRef = database.ref('orders').child(orderKey);
+
+        // تحديث قيمة cashbackQuantity
+        const cashbackRef = database.ref('cashback').orderByChild('customerPhone').equalTo(customerPhone);
+        cashbackRef.once('value', (snapshot) => {
+            const cashbackData = snapshot.val();
+            if (cashbackData) {
+                const cashbackKey = Object.keys(cashbackData)[0]; // افترض أن هناك عنصر واحد فقط
+                const cashbackQuantity = cashbackData[cashbackKey].cashbackQuantity;
+
+                // تحديث قيمة cashbackQuantity
+                const newCashbackQuantity = cashbackQuantity - quantity;
+                database.ref('cashback').child(cashbackKey).update({
+                    cashbackQuantity: newCashbackQuantity
+                }).then(() => {
+                    console.log('تم تحديث كمية الكاش باك.');
+                }).catch(error => {
+                    console.error('حدث خطأ أثناء تحديث كمية الكاش باك:', error);
+                });
+            }
+        });
+
+        // حذف الطلب من السلة
+        orderRef.remove()
+            .then(() => {
+                alert('تم حذف المنتج من السلة.');
+                loadCartItems();  // إعادة تحميل السلة بعد الحذف
+                updateCartNotification();  // تحديث إشعار السلة في الصفحة الرئيسية
+            })
+            .catch(error => {
+                console.error('حدث خطأ أثناء حذف المنتج:', error);
+            });
+    }
+
+    // تحميل السلة عند تحميل الصفحة
+    window.onload = loadCartItems;
+</script>
+
 </body>
 </html>
