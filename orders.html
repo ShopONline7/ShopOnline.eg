@@ -90,6 +90,28 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
             transition: 0.3s;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+button {
+            background-color: #4CAF50; /* اللون الأخضر */
+            color: white; /* النص باللون الأبيض */
+            font-size: 16px;
+            padding: 15px 32px;
+            border: none;
+            border-radius: 8px; /* الزوايا المدورة */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease; /* تأثير الانتقال */
+        }
+
+        button:hover {
+            background-color: #45a049; /* لون خلفية الزر عند المرور عليه */
+            transform: scale(1.1); /* تكبير الزر عند المرور عليه */
+        }
+
+        button:active {
+            background-color: #3e8e41; /* لون خلفية الزر عند الضغط عليه */
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -98,11 +120,13 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
         <div id="orderContainer"></div>
     </div>
 
-<button onclick="window.location.href='cashback-orders.html'" style="position: fixed; top: 20px; right: 20px; background-color: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-size: 18px;">
+<button onclick="window.location.href='cashback-orders.html'" style="position: fixed; top: 10px; right: 10px; background-color: #4CAF50; color: white; font-size: 16px; padding: 15px 32px; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.3s ease, transform 0.3s ease; z-index: 1000;">
     طلبات الكاش باك
 </button>
-
-
+<br>
+<button onclick="window.location.href='orders-notfound.html'" style="position: fixed; top: 70px; right: 10px; background-color: #4CAF50; color: white; font-size: 16px; padding: 15px 32px; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.3s ease, transform 0.3s ease; z-index: 1000;">
+    طلبات المنتجات الغير موجودة
+</button>
 
     <!-- Firebase SDK v8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
