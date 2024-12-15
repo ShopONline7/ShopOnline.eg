@@ -8,6 +8,23 @@
 <br></br>
 <button onclick="window.location.href='product-request.html'">اطلب منتج غير موجود</button>    
 
+<button style="
+        background-color: #ffc107; 
+        color: #000; 
+        border: none; 
+        border-radius: 5px; 
+        padding: 5px 10px; 
+        cursor: pointer; 
+        font-size: 14px;
+        position: absolute; 
+        top: 10px; 
+        left: 10px;" 
+        onclick="logout()">
+        تسجيل الخروج
+    </button>
+
+
+
 <style>
         body {
             font-family: Arial, sans-serif;
@@ -156,6 +173,15 @@ function displayWelcomeMessage() {
 
 // استدعاء دالة الترحيب بعد تحميل الصفحة أو عند التحقق من رقم الهاتف
 displayWelcomeMessage();
+
+ function logout() {
+            // احذف رقم الهاتف من localStorage
+            localStorage.removeItem('customerPhone');
+
+            // الانتقال إلى صفحة index.html
+            window.location.href = 'index.html';
+        }
+
 
     </script>
 </body>

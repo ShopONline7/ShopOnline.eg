@@ -4,6 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ShopOnline</title>
+<script>
+        // الدالة التي تعمل عند تحميل الصفحة
+        window.onload = function () {
+            // الحصول على رقم الهاتف من localStorage
+            const phone = localStorage.getItem('customerPhone');
+            
+            // التحقق إذا كان رقم الهاتف موجودًا
+            if (phone) {
+                // الانتقال إلى صفحة products.html
+                window.location.href = 'products.html';
+            }
+        };
+    </script>
     <link rel="icon" href="marketlogo.png" type="image/png">
     <style>
         body {
@@ -72,5 +85,7 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
             <a href="login.html"><button class="button">تسجيل الدخول</button></a>
         </div>
     </div>
+
+
 </body>
 </html>

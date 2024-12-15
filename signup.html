@@ -123,6 +123,20 @@ background-repeat: no-repeat; /* يمنع تكرار الخلفية */
                 alert("حدث خطأ أثناء إنشاء الحساب: " + error.message);
             });
         });
+
+// الدالة التي تعمل عند تحميل الصفحة
+        window.onload = function () {
+            // الحصول على رقم الهاتف من localStorage
+            const phone = localStorage.getItem('customerPhone');
+            
+            // التحقق إذا كان رقم الهاتف موجودًا
+            if (phone) {
+                // الانتقال إلى صفحة products.html
+                window.location.href = 'products.html';
+            }
+        };
+
+
     </script>
 </body>
 </html>
